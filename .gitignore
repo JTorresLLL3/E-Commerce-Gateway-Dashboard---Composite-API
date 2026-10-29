@@ -1,0 +1,23 @@
+# Maven & Build Outputs
+target/
+**/target/
+*.jar
+*.war
+*.ear
+*.class
+
+# Logs & PID files
+logs/
+*.log
+*.pid
+
+# IDE & OS
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.DS_Store
+Thumbs.db
+
