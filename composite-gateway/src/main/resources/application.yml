@@ -1,0 +1,19 @@
+server:
+  port: 3000
+
+spring:
+  application:
+    name: composite-gateway
+  jackson:
+    default-property-inclusion: non_null
+
+microservices:
+  catalog:
+    base-url: http://localhost:3001
+  inventory:
+    base-url: http://localhost:3002
+  currency:
+    frankfurter-url: https://api.frankfurter.app/latest?from=USD&to=MXN
+    open-er-url: https://open.er-api.com/v6/latest/USD
+    fallback-rate-mxn: 17.00
+
