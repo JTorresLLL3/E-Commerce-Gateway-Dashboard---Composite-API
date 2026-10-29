@@ -1,0 +1,9 @@
+server:
+  port: 3001
+
+spring:
+  application:
+    name: catalog-service
+  jackson:
+    default-property-inclusion: non_null
+
