@@ -1,0 +1,9 @@
+server:
+  port: 3002
+
+spring:
+  application:
+    name: inventory-service
+  jackson:
+    default-property-inclusion: non_null
+
