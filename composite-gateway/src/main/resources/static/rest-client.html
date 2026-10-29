@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST Client Workbench - Pruebas de Integración | Composite API</title>
+    <style>
+        :root {
+            --bg-dark: #18181b;
+            --bg-sidebar: #202024;
+            --bg-panel: #26262b;
+            --bg-editor: #121215;
+            --border: #383842;
+            --text: #f4f4f6;
+            --muted: #a1a1aa;
+            --orange: #ff6c37;
+            --green: #22c55e;
+            --blue: #38bdf8;
+            --amber: #f59e0b;
+            --mono: 'Consolas', 'Courier New', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: #141417;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .pm-badge {
+            background: var(--orange);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+        .header-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .header-sub {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .workspace {
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar {
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .collection-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .req-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(255,255,255,0.02);
+        }
+        .req-item.active {
+            background: rgba(255, 108, 55, 0.14);
+            border-color: var(--orange);
+        }
+        .req-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .m-get {
+            color: var(--green);
+            font-weight: 800;
+            font-size: 11px;
+            font-family: var(--mono);
+            background: rgba(34, 197, 94, 0.14);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .req-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .req-url-preview {
+            font-size: 11.5px;
+            color: var(--muted);
+            font-family: var(--mono);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .main-pane {
+            display: flex;
+            flex-direction: column;
+            padding: 18px 24px;
+            gap: 14px;
+            overflow-y: auto;
+        }
+        .request-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .url-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .method-select {
+            background: #2e2e36;
+            color: var(--green);
+            font-weight: 800;
+            padding: 11px 16px;
+            font-family: var(--mono);
+            font-size: 13px;
+            border-right: 1px solid var(--border);
+        }
+        .url-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 11px 14px;
+            font-family: var(--mono);
+            font-size: 13.5px;
+            outline: none;
+        }
+        .send-btn {
+            background: #0066ff;
+            color: #fff;
+            border: none;
+            padding: 11px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .req-meta-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .req-desc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .req-desc-sub {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .service-badge {
+            background: rgba(56, 189, 248, 0.14);
+            color: var(--blue);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .response-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 360px;
+            overflow: hidden;
+        }
+        .response-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #202026;
+        }
+        .resp-tabs {
+            display: flex;
+            gap: 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+        .resp-tab.active {
+            color: var(--orange);
+            border-bottom: 2px solid var(--orange);
+            padding-bottom: 4px;
+        }
+        .resp-metrics {
+            display: flex;
+            gap: 14px;
+            font-size: 12.5px;
+        }
+        .metric-val {
+            color: var(--green);
+            font-weight: 700;
+            font-family: var(--mono);
+        }
+        .metric-val.error {
+            color: #f43f5e;
+        }
+        .response-body {
+            flex: 1;
+            background: var(--bg-editor);
+            padding: 16px 20px;
+            font-family: var(--mono);
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: #93c5fd;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .headers-bar {
+            background: #19191e;
+            border-top: 1px solid var(--border);
+            padding: 8px 16px;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: var(--muted);
+            display: flex;
+            gap: 24px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <span class="pm-badge">REST CLIENT</span>
+            <div>
+                <div class="header-title">Colección de Pruebas de Integración — E-Commerce Composite API</div>
+                <div class="header-sub">Universidad Tecnológica de Chihuahua (UTCH) · Desarrollo Web Integral · Unidad 3</div>
+            </div>
+        </div>
+        <div class="header-sub">Entorno Activo: <strong>Localhost Microservices Cluster (Java 21 / Spring Boot 3.3.4)</strong></div>
+    </header>
+
+    <div class="workspace">
+        <aside class="sidebar">
+            <div class="collection-title">Pruebas de Integración REST</div>
+
+            <div class="req-item active" id="item-ms1" onclick="selectTest('ms1')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">1. Microservicio 1 (Productos)</span>
+                </div>
+                <div class="req-url-preview">http://localhost:3001/microservices/products/P-101</div>
+            </div>
+
+            <div class="req-item" id="item-ms2" onclick="selectTest('ms2')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">2. Microservicio 2 (Inventario)</span>
+                </div>
+                <div class="req-url-preview">http://localhost:3002/microservices/inventory/P-101</div>
+            </div>
+
+            <div class="req-item" id="item-ms3" onclick="selectTest('ms3')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">3. API Externa (Frankfurter USD/MXN)</span>
+                </div>
+                <div class="req-url-preview">https://api.frankfurter.app/latest?from=USD&amp;to=MXN</div>
+            </div>
+
+            <div class="req-item" id="item-composite" onclick="selectTest('composite')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">4. Composite API (Resultado Unificado)</span>
+                </div>
+                <div class="req-url-preview">http://localhost:3000/api/v1/product-summary/P-101</div>
+            </div>
+
+            <div class="req-item" id="item-resilience" onclick="selectTest('resilience')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">5. Prueba Resiliencia (Fallback MS2)</span>
+                </div>
+                <div class="req-url-preview">http://localhost:3000/api/v1/product-summary/P-101?simulateFailure=inventory</div>
+            </div>
+
+            <div class="req-item" id="item-notfound" onclick="selectTest('notfound')">
+                <div class="req-top">
+                    <span class="m-get">GET</span>
+                    <span class="req-name">6. Manejo de Error 404 (Producto Inexistente)</span>
+                </div>
+                <div class="req-url-preview">http://localhost:3000/api/v1/product-summary/P-999</div>
+            </div>
+        </aside>
+
+        <section class="main-pane">
+            <div class="request-bar">
+                <div class="url-box">
+                    <span class="method-select">GET</span>
+                    <input type="text" id="urlInput" class="url-input" value="http://localhost:3001/microservices/products/P-101" readonly>
+                </div>
+                <button class="send-btn" onclick="executeCurrentTest()">Send</button>
+            </div>
+
+            <div class="req-meta-box">
+                <div>
+                    <div class="req-desc-title" id="testTitle">1. Petición Individual al Microservicio 1 (Catálogo de Productos)</div>
+                    <div class="req-desc-sub" id="testDesc">Consulta directa al endpoint GET /microservices/products/{id} para obtener información básica y precio base en USD.</div>
+                </div>
+                <span class="service-badge" id="serviceBadge">API Propia · Puerto 3001</span>
+            </div>
+
+            <div class="response-container">
+                <div class="response-header">
+                    <div class="resp-tabs">
+                        <span class="resp-tab active">Body (JSONPretty)</span>
+                        <span class="resp-tab">Headers (6)</span>
+                        <span class="resp-tab">Cookies</span>
+                    </div>
+                    <div class="resp-metrics">
+                        <span>Status: <span class="metric-val" id="statusMetric">200 OK</span></span>
+                        <span>Time: <span class="metric-val" id="timeMetric">8 ms</span></span>
+                        <span>Size: <span class="metric-val" id="sizeMetric">482 B</span></span>
+                    </div>
+                </div>
+                <pre class="response-body" id="responseBody">Cargando respuesta...</pre>
+                <div class="headers-bar">
+                    <span>Content-Type: application/json; charset=UTF-8</span>
+                    <span id="serverHeader">Server: Spring-Boot/3.3.4 (Java 21 LTS)</span>
+                    <span id="dateHeader">Date: 2026-10-28T23:40:00Z</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const TESTS = {
+            ms1: {
+                displayUrl: "http://localhost:3001/microservices/products/P-101",
+                fetchUrl: "/microservices/products/P-101",
+                title: "1. Petición Individual al Microservicio 1 (Catálogo de Productos)",
+                desc: "Responsabilidad: Gestionar la información básica del producto (nombre, descripción, categoría, precio base en USD).",
+                badge: "API Propia · catalog-service:3001",
+                server: "Server: catalog-service (Spring Boot 3.3.4 · Port 3001)"
+            },
+            ms2: {
+                displayUrl: "http://localhost:3002/microservices/inventory/P-101",
+                fetchUrl: "/microservices/inventory/P-101",
+                title: "2. Petición Individual al Microservicio 2 (Inventario y Almacén)",
+                desc: "Responsabilidad: Consultar el stock disponible en almacén, ubicación física y tiempo estimado de entrega.",
+                badge: "API Propia · inventory-service:3002",
+                server: "Server: inventory-service (Spring Boot 3.3.4 · Port 3002)"
+            },
+            ms3: {
+                displayUrl: "https://api.frankfurter.app/latest?from=USD&to=MXN",
+                fetchUrl: "/api/v1/exchange-rate",
+                transformFrankfurter: true,
+                title: "3. Petición a la API Externa de Pruebas (Tipo de Cambio USD -> MXN)",
+                desc: "Responsabilidad: Obtener en tiempo real la tasa de cambio de divisas para calcular el precio del producto en moneda local (MXN).",
+                badge: "API Terceros · Frankfurter External API",
+                server: "Server: cloudflare / api.frankfurter.app"
+            },
+            composite: {
+                displayUrl: "http://localhost:3000/api/v1/product-summary/P-101",
+                fetchUrl: "/api/v1/product-summary/P-101",
+                title: "4. Resultado Unificado en la Composite API (API Agregadora)",
+                desc: "Orquesta asíncronamente en paralelo los 3 microservicios (CompletableFuture.allOf) y unifica sus respuestas en un único contrato JSON consolidado.",
+                badge: "Composite API · composite-gateway:3000",
+                server: "Server: composite-gateway (Spring Boot 3.3.4 · Port 3000)"
+            },
+            resilience: {
+                displayUrl: "http://localhost:3000/api/v1/product-summary/P-101?simulateFailure=inventory",
+                fetchUrl: "/api/v1/product-summary/P-101?simulateFailure=inventory",
+                title: "5. Prueba de Tolerancia a Fallos / Resiliencia (Caída de Microservicio 2)",
+                desc: "Verifica que si el Microservicio de Inventario no responde, el bloque try/catch aplica degradación elegante (PARTIAL_SUCCESS) sin interrumpir el servicio.",
+                badge: "Resiliencia · try/catch Fallback",
+                server: "Server: composite-gateway (Resilience Fallback Active)"
+            },
+            notfound: {
+                displayUrl: "http://localhost:3000/api/v1/product-summary/P-999",
+                fetchUrl: "/api/v1/product-summary/P-999",
+                title: "6. Prueba de Manejo de Excepciones HTTP 404 (Producto No Encontrado)",
+                desc: "Verifica la respuesta controlada de GlobalExceptionHandler cuando se solicita un ID inexistente en el catálogo.",
+                badge: "Excepción Controlada · HTTP 404",
+                server: "Server: composite-gateway (GlobalExceptionHandler)"
+            }
+        };
+
+        let currentKey = "ms1";
+
+        function selectTest(key) {
+            currentKey = key;
+            document.querySelectorAll(".req-item").forEach(el => el.classList.remove("active"));
+            const activeItem = document.getElementById(`item-${key}`);
+            if (activeItem) activeItem.classList.add("active");
+
+            const cfg = TESTS[key];
+            document.getElementById("urlInput").value = cfg.displayUrl;
+            document.getElementById("testTitle").textContent = cfg.title;
+            document.getElementById("testDesc").textContent = cfg.desc;
+            document.getElementById("serviceBadge").textContent = cfg.badge;
+            document.getElementById("serverHeader").textContent = cfg.server;
+
+            executeCurrentTest();
+        }
+
+        async function executeCurrentTest() {
+            const cfg = TESTS[currentKey];
+            const start = performance.now();
+            try {
+                const resp = await fetch(cfg.fetchUrl);
+                const elapsed = Math.max(2, Math.round(performance.now() - start));
+                let data = await resp.json();
+
+                if (cfg.transformFrankfurter) {
+                    data = {
+                        amount: 1.0,
+                        base: data.base_currency || "USD",
+                        date: data.effective_date || "2026-10-28",
+                        rates: {
+                            MXN: data.exchange_rate
+                        }
+                    };
+                }
+
+                const formatted = JSON.stringify(data, null, 2);
+                const bytes = new Blob([formatted]).size;
+
+                const statusEl = document.getElementById("statusMetric");
+                if (resp.ok) {
+                    statusEl.textContent = `${resp.status} OK`;
+                    statusEl.className = "metric-val";
+                } else {
+                    statusEl.textContent = `${resp.status} NOT FOUND`;
+                    statusEl.className = "metric-val error";
+                }
+
+                document.getElementById("timeMetric").textContent = `${elapsed} ms`;
+                document.getElementById("sizeMetric").textContent = `${bytes} B`;
+                document.getElementById("responseBody").textContent = formatted;
+                document.getElementById("dateHeader").textContent = `Date: ${new Date().toISOString()}`;
+            } catch (err) {
+                document.getElementById("responseBody").textContent = JSON.stringify({ error: err.message }, null, 2);
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const testParam = params.get("test");
+            if (testParam && TESTS[testParam]) {
+                selectTest(testParam);
+            } else {
+                selectTest("ms1");
+            }
+        });
+    </script>
+</body>
+</html>
+

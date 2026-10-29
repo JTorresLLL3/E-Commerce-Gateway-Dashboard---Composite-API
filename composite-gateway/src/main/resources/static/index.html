@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Gateway &amp; Dashboard | Composite API - UTCH</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="brand-badge">UTCH</div>
+            <div>
+                <h1>E-Commerce Gateway &amp; Dashboard <span class="badge-pattern">Composite API Pattern</span></h1>
+                <p>Orquestación Concurrente con Java 21 + Spring Boot 3 (`CompletableFuture.allOf` + `RestClient`)</p>
+            </div>
+        </div>
+        <div class="topbar-status">
+            <span class="service-pill online"><span class="dot"></span> MS1 Catálogo :3001</span>
+            <span class="service-pill online"><span class="dot"></span> MS2 Inventario :3002</span>
+            <span class="service-pill external"><span class="dot"></span> MS3 Frankfurter API</span>
+            <span class="service-pill gateway"><span class="dot"></span> Composite Gateway :3000</span>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Selector de Productos y Simulador de Resiliencia -->
+        <section class="control-bar">
+            <div class="product-selector-group">
+                <label>Seleccionar Producto del Catálogo:</label>
+                <div class="product-pills" id="productPills">
+                    <button class="prod-btn active" data-id="P-101">P-101 · Laptop Gamer XYZ</button>
+                    <button class="prod-btn" data-id="P-102">P-102 · Monitor UltraWide 34"</button>
+                    <button class="prod-btn" data-id="P-103">P-103 · Teclado Mecánico RGB</button>
+                    <button class="prod-btn" data-id="P-104">P-104 · RTX 4080 Super (Low Stock)</button>
+                    <button class="prod-btn" data-id="P-106">P-106 · Silla Pro (Out of Stock)</button>
+                    <button class="prod-btn error-btn" data-id="P-999">P-999 · No Existe (404)</button>
+                </div>
+            </div>
+
+            <div class="resilience-group">
+                <label>Modo de Resiliencia (Tolerancia a Fallos):</label>
+                <div class="resilience-pills">
+                    <button class="res-btn active" data-mode="">Operación Normal (3 Servicios OK)</button>
+                    <button class="res-btn warn" data-mode="inventory">Simular Caída MS2 (Inventario)</button>
+                    <button class="res-btn warn" data-mode="currency">Simular Caída MS3 (Frankfurter API)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerta de Resiliencia (si aplica) -->
+        <div id="resilienceBanner" class="resilience-banner hidden"></div>
+
+        <!-- Grid Principal: Vista Detalle del Producto + Contrato Consolidado y Telemetría -->
+        <div class="dashboard-grid">
+            <!-- Columna Izquierda: Pantalla Principal del Detalle de Producto -->
+            <section class="card product-detail-card">
+                <div class="card-header">
+                    <div>
+                        <span class="eyebrow">VISTA CLIENTE OPTIMIZADA (1 SOLA PETICIÓN HTTP)</span>
+                        <h2 id="prodTitle">Laptop Gamer XYZ</h2>
+                    </div>
+                    <span id="stockBadge" class="stock-badge in-stock">IN_STOCK</span>
+                </div>
+
+                <div class="product-meta-row">
+                    <span class="meta-chip" id="prodIdChip">ID: P-101</span>
+                    <span class="meta-chip" id="prodCategory">Computadoras y Laptops</span>
+                    <span class="meta-chip" id="prodBrand">Marca: XYZ Gaming</span>
+                    <span class="meta-chip" id="prodSku">SKU-LPT-XYZ-101</span>
+                </div>
+
+                <p class="product-description" id="prodDescription">
+                    Laptop de alto rendimiento con procesador de última generación, 32GB RAM DDR5, almacenamiento SSD NVMe de 1TB y tarjeta gráfica dedicada para gaming competitivo y desarrollo de software.
+                </p>
+
+                <!-- Bloque de Precios Consolidados USD y MXN -->
+                <div class="pricing-box">
+                    <div class="price-column primary-mxn">
+                        <span class="price-label">Precio Moneda Local (MXN)</span>
+                        <div class="price-value-mxn" id="prodPriceMxn">$20,400.00 <small>MXN</small></div>
+                        <span class="price-sub" id="prodConversionSource">Fuente: Frankfurter External API</span>
+                    </div>
+                    <div class="price-divider"></div>
+                    <div class="price-column">
+                        <span class="price-label">Precio Base Catálogo (USD)</span>
+                        <div class="price-value-usd" id="prodPriceUsd">$1,200.00 <small>USD</small></div>
+                        <span class="price-sub" id="prodExchangeRate">Tasa aplicada: 1 USD = 17.00 MXN</span>
+                    </div>
+                </div>
+
+                <!-- Bloque de Inventario y Logística -->
+                <div class="logistics-grid">
+                    <div class="logistic-item">
+                        <span class="logistic-label">Unidades Disponibles</span>
+                        <strong id="prodUnits">15 unidades</strong>
+                    </div>
+                    <div class="logistic-item">
+                        <span class="logistic-label">Ubicación en Almacén</span>
+                        <strong id="prodWarehouse">CEDIS Chihuahua Norte - Nave A</strong>
+                    </div>
+                    <div class="logistic-item">
+                        <span class="logistic-label">Tiempo Estimado de Entrega</span>
+                        <strong id="prodDelivery">24 a 48 horas (Envío Express)</strong>
+                    </div>
+                    <div class="logistic-item">
+                        <span class="logistic-label">Estado de Consolidación</span>
+                        <strong id="prodGlobalStatus" class="status-text-success">SUCCESS</strong>
+                    </div>
+                </div>
+
+                <div class="specs-section">
+                    <h4>Especificaciones Técnicas (MS1 Catálogo)</h4>
+                    <ul class="specs-list" id="prodSpecs">
+                        <li>Intel Core i9 14900HX</li>
+                        <li>32 GB DDR5 5600MHz</li>
+                        <li>NVIDIA RTX 4070 8GB</li>
+                        <li>Pantalla 16" QHD+ 240Hz</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Columna Derecha: Contrato JSON Consolidado y Orquestación Paralela -->
+            <section class="right-column">
+                <div class="card contract-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="eyebrow">CONTRATO JSON CONSOLIDADO</span>
+                            <h3>Respuesta Unificada del Composite API</h3>
+                        </div>
+                        <span class="http-status-pill" id="compositeHttpStatus">HTTP 200 OK</span>
+                    </div>
+                    <div class="endpoint-bar">
+                        <span class="method-badge">GET</span>
+                        <code id="currentEndpointUrl">/api/v1/product-summary/P-101</code>
+                    </div>
+                    <pre class="code-block" id="consolidatedJsonViewer">{
+  "product_id": "P-101",
+  "title": "Laptop Gamer XYZ",
+  "price_usd": 1200.00,
+  "price_mxn": 20400.00,
+  "stock_status": "IN_STOCK",
+  "available_units": 15,
+  "currency_conversion_source": "Frankfurter External API",
+  "status": "SUCCESS"
+}</pre>
+                </div>
+
+                <div class="card metrics-card">
+                    <div class="card-header">
+                        <div>
+                            <span class="eyebrow">TELEMETRÍA DE ORQUESTACIÓN PARALELA (`CompletableFuture.allOf`)</span>
+                            <h3>Rendimiento frente a Chatty I/O</h3>
+                        </div>
+                        <span class="metric-highlight" id="savedRequestsBadge">-66% Peticiones Cliente</span>
+                    </div>
+
+                    <div class="timeline-bars">
+                        <div class="timeline-row">
+                            <div class="timeline-label">
+                                <span>MS1 Catálogo (<code>/microservices/products/{id}</code>)</span>
+                                <strong id="ms1Time">4 ms</strong>
+                            </div>
+                            <div class="progress-track"><div class="progress-fill ms1" id="ms1Bar" style="width: 25%"></div></div>
+                        </div>
+                        <div class="timeline-row">
+                            <div class="timeline-label">
+                                <span>MS2 Inventario (<code>/microservices/inventory/{id}</code>)</span>
+                                <strong id="ms2Time">5 ms</strong>
+                            </div>
+                            <div class="progress-track"><div class="progress-fill ms2" id="ms2Bar" style="width: 30%"></div></div>
+                        </div>
+                        <div class="timeline-row">
+                            <div class="timeline-label">
+                                <span>MS3 Divisas (<code>api.frankfurter.app</code>)</span>
+                                <strong id="ms3Time">110 ms</strong>
+                            </div>
+                            <div class="progress-track"><div class="progress-fill ms3" id="ms3Bar" style="width: 85%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="latency-comparison">
+                        <div class="lat-box">
+                            <span>Tiempo Total Composite Paralelo</span>
+                            <strong id="totalParallelTime">112 ms</strong>
+                        </div>
+                        <div class="lat-box">
+                            <span>Suma Secuencial (Chatty I/O)</span>
+                            <strong id="totalSequentialTime">119 ms</strong>
+                        </div>
+                        <div class="lat-box">
+                            <span>Estrategia Backend</span>
+                            <strong>CompletableFuture</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Sección Inferior: Desglose de las 3 Respuestas Individuales de los Microservicios -->
+        <section class="card microservices-inspector">
+            <div class="card-header">
+                <div>
+                    <span class="eyebrow">INSPECTOR DE MICROSERVICIOS INDIVIDUALES Y CONSOLA DE PRUEBAS REST</span>
+                    <h3>Respuestas Individuales de las 3 Fuentes de Datos</h3>
+                </div>
+                <div class="inspector-actions">
+                    <button class="action-btn" id="refreshAllBtn">Ejecutar Pruebas de Integración en Vivo</button>
+                </div>
+            </div>
+
+            <div class="ms-columns">
+                <div class="ms-panel">
+                    <div class="ms-panel-header ms1-border">
+                        <span class="ms-tag">Microservicio 1 · Propia (:3001)</span>
+                        <code>GET /microservices/products/{id}</code>
+                    </div>
+                    <pre class="code-block small" id="ms1JsonBox">Cargando...</pre>
+                </div>
+
+                <div class="ms-panel">
+                    <div class="ms-panel-header ms2-border">
+                        <span class="ms-tag">Microservicio 2 · Propia (:3002)</span>
+                        <code>GET /microservices/inventory/{productId}</code>
+                    </div>
+                    <pre class="code-block small" id="ms2JsonBox">Cargando...</pre>
+                </div>
+
+                <div class="ms-panel">
+                    <div class="ms-panel-header ms3-border">
+                        <span class="ms-tag">Microservicio 3 · Externa (Terceros)</span>
+                        <code>GET https://api.frankfurter.app/latest?from=USD&amp;to=MXN</code>
+                    </div>
+                    <pre class="code-block small" id="ms3JsonBox">Cargando...</pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
+

@@ -11,6 +11,9 @@ logs/
 *.log
 *.pid
 
+# Local Documentation & Evidence Deliverables
+docs/
+
 # IDE & OS
 .idea/
 *.iml
